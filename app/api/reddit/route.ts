@@ -40,8 +40,7 @@ async function synthesizeToPrompt(subreddit: string, topic: string, posts: any) 
   const postsText = [
     ...posts.topPosts.map((p: any) => `[TOP] ${p.title}: ${p.selftext}`),
     ...posts.searchPosts.map((p: any) => `[SEARCH] ${p.title}: ${p.selftext}`)
-  ].join('\n\n').slice(0, 8000)
-
+  ].join('\n\n').slice(0, 8000).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF]/g, '')
   const synthesis = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 1000,
