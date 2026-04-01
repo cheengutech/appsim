@@ -1,49 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+
 export const maxDuration = 60
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-async function fetchRedditPosts(subreddit: string, topic: string) {
-  const headers = { 
-    'User-Agent': 'Mozilla/5.0 (compatible; research-bot/1.0)',
-    'Accept': 'application/json',
-    'Accept-Language': 'en-US,en;q=0.9',
-  }
-  
-  const topRes = await fetch(
-    `https://old.reddit.com/r/${subreddit}/top.json?limit=25&t=month`,
-    { headers }
-  )
-  const topText = await topRes.text()
-  if (topText.startsWith('<')) throw new Error('Reddit blocked the request — try again in a moment')
-  const topData = JSON.parse(topText)
-  const topPosts = topData?.data?.children?.map((p: any) => ({
-    title: p.data.title,
-    selftext: p.data.selftext?.slice(0, 500),
-    score: p.data.score,
-  })) ?? []
+async function synthesizeToPrompt(subreddit: string, topic: string, posts: any[]) {
+  const postsText = posts
+    .map((p: any) => `${p.title}: ${p.selftext ?? ''}`)
+    .join('\n\n')
+    .slice(0, 8000)
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF]/g, '')
 
-  const searchRes = await fetch(
-    `https://old.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(topic)}&sort=top&limit=25&t=year&restrict_sr=1`,
-    { headers }
-  )
-  const searchText = await searchRes.text()
-  if (searchText.startsWith('<')) throw new Error('Reddit blocked the request — try again in a moment')
-  const searchData = JSON.parse(searchText)
-  const searchPosts = searchData?.data?.children?.map((p: any) => ({
-    title: p.data.title,
-    selftext: p.data.selftext?.slice(0, 500),
-    score: p.data.score,
-  })) ?? []
-
-  return { topPosts, searchPosts }
-}
-
-async function synthesizeToPrompt(subreddit: string, topic: string, posts: any) {
-  const postsText = [
-    ...posts.topPosts.map((p: any) => `[TOP] ${p.title}: ${p.selftext}`),
-    ...posts.searchPosts.map((p: any) => `[SEARCH] ${p.title}: ${p.selftext}`)
-  ].join('\n\n').slice(0, 8000).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF]/g, '')
   const synthesis = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 1000,
@@ -171,22 +139,21 @@ Respond ONLY with valid JSON:
 }
 
 export async function POST(req: NextRequest) {
-  const { subreddit, topic, agentCount = 500 } = await req.json()
-  if (!subreddit || !topic) return NextResponse.json({ error: 'subreddit and topic required' }, { status: 400 })
+  const { subreddit, topic, posts, agentCount = 500 } = await req.json()
+  if (!subreddit || !topic || !posts) {
+    return NextResponse.json({ error: 'subreddit, topic, and posts required' }, { status: 400 })
+  }
 
-  // Step 1: Fetch Reddit posts
-  const posts = await fetchRedditPosts(subreddit, topic)
-
-  // Step 2: Synthesize into app prompt
+  // Synthesize posts into app prompt
   const appPrompt = await synthesizeToPrompt(subreddit, topic, posts)
 
-  // Step 3: Run simulation
+  // Run simulation
   const simResult = await runSimulation(appPrompt, agentCount)
 
   return NextResponse.json({
     subreddit,
     topic,
-    postsAnalyzed: posts.topPosts.length + posts.searchPosts.length,
+    postsAnalyzed: posts.length,
     appPrompt,
     ...simResult
   })

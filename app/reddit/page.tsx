@@ -36,7 +36,7 @@ type ResearchResult = {
 }
 
 const STEPS = [
-  { label: 'Scraping Reddit posts...', icon: '🔍' },
+  { label: 'Fetching Reddit posts...', icon: '🔍' },
   { label: 'Analyzing pain points...', icon: '🧠' },
   { label: 'Synthesizing app concept...', icon: '✍️' },
   { label: 'Simulating Day 1...', icon: '👤' },
@@ -50,6 +50,33 @@ const POPULAR_SUBS = [
   'relationship_advice', 'personalfinance', 'entrepreneur',
   'startups', 'dating', 'mentalhealth', 'loseit', 'NoFap'
 ]
+
+async function fetchRedditClient(subreddit: string, topic: string) {
+  // Fetch from browser so Reddit sees a real browser IP
+  const [topRes, searchRes] = await Promise.all([
+    fetch(`https://www.reddit.com/r/${subreddit}/top.json?limit=25&t=month`),
+    fetch(`https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(topic)}&sort=top&limit=25&t=year&restrict_sr=1`)
+  ])
+
+  const [topData, searchData] = await Promise.all([
+    topRes.json(),
+    searchRes.json()
+  ])
+
+  const topPosts = topData?.data?.children?.map((p: any) => ({
+    title: p.data.title,
+    selftext: p.data.selftext?.slice(0, 400) ?? '',
+    score: p.data.score,
+  })) ?? []
+
+  const searchPosts = searchData?.data?.children?.map((p: any) => ({
+    title: p.data.title,
+    selftext: p.data.selftext?.slice(0, 400) ?? '',
+    score: p.data.score,
+  })) ?? []
+
+  return [...topPosts, ...searchPosts]
+}
 
 export default function RedditResearch() {
   const router = useRouter()
@@ -75,11 +102,25 @@ export default function RedditResearch() {
     }, 7000)
 
     try {
+      // Step 1: Fetch Reddit from browser (avoids server IP blocking)
+      setCurrentStep(0)
+      const posts = await fetchRedditClient(subreddit.trim(), topic.trim())
+      if (posts.length === 0) throw new Error('No posts found. Try a different subreddit or topic.')
+
+      setCurrentStep(1)
+
+      // Step 2: Send posts to server for Claude synthesis + simulation
       const res = await fetch('/api/reddit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subreddit: subreddit.trim(), topic: topic.trim(), agentCount: parseInt(agentCount) })
+        body: JSON.stringify({
+          subreddit: subreddit.trim(),
+          topic: topic.trim(),
+          posts,
+          agentCount: parseInt(agentCount)
+        })
       })
+
       clearInterval(ticker)
       if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t}`) }
       const data: ResearchResult = await res.json()
@@ -150,7 +191,7 @@ export default function RedditResearch() {
             <div style={LS}>Topic to research</div>
             <input
               value={topic} onChange={e => setTopic(e.target.value)}
-              placeholder="e.g. accountability partner, habit tracking, morning routine"
+              placeholder="e.g. accountability partner, habit tracking"
               style={IS as React.CSSProperties}
             />
             <div style={{ marginTop: 12 }}>
@@ -193,7 +234,6 @@ export default function RedditResearch() {
       {/* Results */}
       {result && s && (
         <div>
-          {/* Meta */}
           <div style={{ background: '#E1F5EE', border: '1px solid #9FE1CB', padding: '12px 16px', marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: 13, fontFamily: 'system-ui', color: '#085041' }}>
               Analyzed <b>{result.postsAnalyzed}</b> posts from <b>r/{result.subreddit}</b> about <b>"{result.topic}"</b>
@@ -203,7 +243,6 @@ export default function RedditResearch() {
             </button>
           </div>
 
-          {/* Synthesized prompt */}
           {showPrompt && (
             <div style={{ background: '#fff', border: '1px solid #e8e8e4', padding: 16, marginBottom: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
@@ -218,7 +257,6 @@ export default function RedditResearch() {
             </div>
           )}
 
-          {/* Metrics */}
           <div style={SH}>Simulation results — 90 days</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 20 }}>
             {[
@@ -234,7 +272,6 @@ export default function RedditResearch() {
             ))}
           </div>
 
-          {/* Retention curve */}
           <div style={SH}>Retention curve</div>
           <div style={{ marginBottom: 24 }}>
             {result.funnel.map((f, i) => {
@@ -256,7 +293,6 @@ export default function RedditResearch() {
             })}
           </div>
 
-          {/* Turn breakdown */}
           <div style={SH}>Turn-by-turn breakdown</div>
           {result.turns.map((t, i) => (
             <div key={i} style={{ border: '1px solid #e8e8e4', marginBottom: 10, background: '#fff' }}>
@@ -301,6 +337,15 @@ export default function RedditResearch() {
               )}
             </div>
           ))}
+
+          {s.totalViralJoins > 0 && (
+            <div style={{ background: '#E1F5EE', border: '1px solid #9FE1CB', padding: '14px 16px', marginTop: 8 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, fontFamily: 'system-ui', color: '#085041', marginBottom: 4 }}>Viral growth summary</div>
+              <div style={{ fontSize: 13, fontFamily: 'system-ui', color: '#085041' }}>
+                {s.totalViralJoins} new agents joined through referrals across 90 days. Viral coefficient: {s.viralCoefficient.toFixed(2)} — {s.viralCoefficient >= 1 ? 'app is growing on its own' : s.viralCoefficient >= 0.5 ? 'meaningful organic growth' : 'needs stronger referral mechanic'}.
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
