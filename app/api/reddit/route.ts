@@ -5,34 +5,35 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 async function fetchRedditPosts(subreddit: string, topic: string) {
   const headers = { 
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    'User-Agent': 'Mozilla/5.0 (compatible; research-bot/1.0)',
+    'Accept': 'application/json',
+    'Accept-Language': 'en-US,en;q=0.9',
   }
   
-  // Fetch top posts from the subreddit
   const topRes = await fetch(
-    `https://www.reddit.com/r/${subreddit}/top.json?limit=25&t=month`,
+    `https://old.reddit.com/r/${subreddit}/top.json?limit=25&t=month`,
     { headers }
   )
-  const topData = await topRes.json()
+  const topText = await topRes.text()
+  if (topText.startsWith('<')) throw new Error('Reddit blocked the request — try again in a moment')
+  const topData = JSON.parse(topText)
   const topPosts = topData?.data?.children?.map((p: any) => ({
     title: p.data.title,
     selftext: p.data.selftext?.slice(0, 500),
     score: p.data.score,
-    num_comments: p.data.num_comments,
-    url: p.data.url
   })) ?? []
 
-  // Search for topic-specific posts
   const searchRes = await fetch(
-    `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(topic)}&sort=top&limit=25&t=year`,
+    `https://old.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(topic)}&sort=top&limit=25&t=year&restrict_sr=1`,
     { headers }
   )
-  const searchData = await searchRes.json()
+  const searchText = await searchRes.text()
+  if (searchText.startsWith('<')) throw new Error('Reddit blocked the request — try again in a moment')
+  const searchData = JSON.parse(searchText)
   const searchPosts = searchData?.data?.children?.map((p: any) => ({
     title: p.data.title,
     selftext: p.data.selftext?.slice(0, 500),
     score: p.data.score,
-    num_comments: p.data.num_comments,
   })) ?? []
 
   return { topPosts, searchPosts }
