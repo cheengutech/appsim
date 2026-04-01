@@ -4,7 +4,9 @@ export const maxDuration = 60
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 async function fetchRedditPosts(subreddit: string, topic: string) {
-  const headers = { 'User-Agent': 'appsim-research/1.0' }
+  const headers = { 
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  }
   
   // Fetch top posts from the subreddit
   const topRes = await fetch(
