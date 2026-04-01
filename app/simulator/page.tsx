@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
+import { useRouter } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -57,6 +58,7 @@ const TURN_LABELS = [
 ]
 
 export default function SimulatorV2() {
+  const router = useRouter()
   const [appDesc, setAppDesc] = useState('')
   const [motivation, setMotivation] = useState('social')
   const [demographic, setDemographic] = useState('mixed')
@@ -149,7 +151,15 @@ export default function SimulatorV2() {
 
   return (
     <div style={{ maxWidth: 820, margin: '0 auto', padding: '2rem 1.5rem', fontFamily: "'Georgia', serif", color: '#1a1a1a', background: '#fafaf8', minHeight: '100vh' }}>
-
+{/* Nav */}
+      <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '2px solid #1a1a1a' }}>
+        <button style={{ padding: '10px 20px', fontSize: 13, fontFamily: 'system-ui', background: 'transparent', border: 'none', cursor: 'pointer', color: '#1a1a1a', fontWeight: 700, borderBottom: '2px solid #1a1a1a', marginBottom: -2 }}>
+          Simulator
+        </button>
+        <button onClick={() => router.push('/reddit')} style={{ padding: '10px 20px', fontSize: 13, fontFamily: 'system-ui', background: 'transparent', border: 'none', cursor: 'pointer', color: '#888', borderBottom: '2px solid transparent', marginBottom: -2 }}>
+          Reddit Research
+        </button>
+      </div>
       <div style={{ borderBottom: '2px solid #1a1a1a', paddingBottom: '1rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <div style={SC}>Multi-turn simulation engine</div>
