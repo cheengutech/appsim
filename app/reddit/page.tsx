@@ -51,33 +51,6 @@ const POPULAR_SUBS = [
   'startups', 'dating', 'mentalhealth', 'loseit', 'NoFap'
 ]
 
-async function fetchRedditClient(subreddit: string, topic: string) {
-  // Fetch from browser so Reddit sees a real browser IP
-  const [topRes, searchRes] = await Promise.all([
-    fetch(`https://www.reddit.com/r/${subreddit}/top.json?limit=25&t=month`),
-    fetch(`https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(topic)}&sort=top&limit=25&t=year&restrict_sr=1`)
-  ])
-
-  const [topData, searchData] = await Promise.all([
-    topRes.json(),
-    searchRes.json()
-  ])
-
-  const topPosts = topData?.data?.children?.map((p: any) => ({
-    title: p.data.title,
-    selftext: p.data.selftext?.slice(0, 400) ?? '',
-    score: p.data.score,
-  })) ?? []
-
-  const searchPosts = searchData?.data?.children?.map((p: any) => ({
-    title: p.data.title,
-    selftext: p.data.selftext?.slice(0, 400) ?? '',
-    score: p.data.score,
-  })) ?? []
-
-  return [...topPosts, ...searchPosts]
-}
-
 export default function RedditResearch() {
   const router = useRouter()
   const [subreddit, setSubreddit] = useState('')
@@ -92,46 +65,26 @@ export default function RedditResearch() {
   const [copied, setCopied] = useState(false)
 
   async function runPipeline() {
-
-    const res = await fetch('/api/reddit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        subreddit: subreddit.trim(), 
-        topic: topic.trim(), 
-        agentCount: parseInt(agentCount) 
-      })
-    })
-    
     if (!subreddit.trim() || !topic.trim()) { alert('Enter a subreddit and topic first.'); return }
     setLoading(true); setError(''); setResult(null); setCurrentStep(0)
-
+  
     let step = 0
     const ticker = setInterval(() => {
       step = Math.min(step + 1, STEPS.length - 1)
       setCurrentStep(step)
     }, 7000)
-
+  
     try {
-      // Step 1: Fetch Reddit from browser (avoids server IP blocking)
-      setCurrentStep(0)
-      const posts = await fetchRedditClient(subreddit.trim(), topic.trim())
-      if (posts.length === 0) throw new Error('No posts found. Try a different subreddit or topic.')
-
-      setCurrentStep(1)
-
-      // Step 2: Send posts to server for Claude synthesis + simulation
       const res = await fetch('/api/reddit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           subreddit: subreddit.trim(),
           topic: topic.trim(),
-          posts,
           agentCount: parseInt(agentCount)
         })
       })
-
+  
       clearInterval(ticker)
       if (!res.ok) { const t = await res.text(); throw new Error(`${res.status}: ${t}`) }
       const data: ResearchResult = await res.json()
