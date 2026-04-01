@@ -92,6 +92,17 @@ export default function RedditResearch() {
   const [copied, setCopied] = useState(false)
 
   async function runPipeline() {
+
+    const res = await fetch('/api/reddit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        subreddit: subreddit.trim(), 
+        topic: topic.trim(), 
+        agentCount: parseInt(agentCount) 
+      })
+    })
+    
     if (!subreddit.trim() || !topic.trim()) { alert('Enter a subreddit and topic first.'); return }
     setLoading(true); setError(''); setResult(null); setCurrentStep(0)
 

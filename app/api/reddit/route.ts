@@ -5,6 +5,32 @@ export const maxDuration = 60
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+async function fetchRedditPosts(subreddit: string, topic: string) {
+  await new Promise(r => setTimeout(r, 1000))
+  
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+    'Accept': 'application/json',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Cache-Control': 'no-cache',
+  }
+
+  const res = await fetch(
+    `https://www.reddit.com/r/${subreddit}/search.json?q=${encodeURIComponent(topic)}&sort=top&limit=50&t=year&restrict_sr=1`,
+    { headers, cache: 'no-store' }
+  )
+
+  const text = await res.text()
+  if (text.startsWith('<')) throw new Error('Reddit blocked the request — try again in a moment')
+  
+  const data = JSON.parse(text)
+  return data?.data?.children?.map((p: any) => ({
+    title: p.data.title,
+    selftext: p.data.selftext?.slice(0, 500) ?? '',
+    score: p.data.score,
+  })) ?? []
+}
+
 async function synthesizeToPrompt(subreddit: string, topic: string, posts: any[]) {
   const postsText = posts
     .map((p: any) => `${p.title}: ${p.selftext ?? ''}`)
@@ -139,15 +165,15 @@ Respond ONLY with valid JSON:
 }
 
 export async function POST(req: NextRequest) {
-  const { subreddit, topic, posts, agentCount = 500 } = await req.json()
-  if (!subreddit || !topic || !posts) {
-    return NextResponse.json({ error: 'subreddit, topic, and posts required' }, { status: 400 })
+  const { subreddit, topic, agentCount = 500 } = await req.json()
+  if (!subreddit || !topic) {
+    return NextResponse.json({ error: 'subreddit and topic required' }, { status: 400 })
   }
 
-  // Synthesize posts into app prompt
-  const appPrompt = await synthesizeToPrompt(subreddit, topic, posts)
+  const posts = await fetchRedditPosts(subreddit, topic)
+  if (posts.length === 0) throw new Error('No posts found')
 
-  // Run simulation
+  const appPrompt = await synthesizeToPrompt(subreddit, topic, posts)
   const simResult = await runSimulation(appPrompt, agentCount)
 
   return NextResponse.json({
