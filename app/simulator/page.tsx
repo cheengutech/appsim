@@ -2,6 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
+import EnhancePanel from './EnhancePanel'
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -589,6 +591,7 @@ export default function SimulatorV3() {
             <button onClick={() => setShowSaveModal(true)} style={BtnO}>Save prompt + results →</button>
           </div>
           <SimResults result={result} expandedTurn={expandedTurn} setExpandedTurn={setExpandedTurn} mc={mc} />
+          <EnhancePanel appDesc={appDesc} simResult={result} />
         </div>
       )}
 
