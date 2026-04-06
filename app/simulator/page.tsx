@@ -10,9 +10,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-const pathname = usePathname()
-
-
 // ── Types ──────────────────────────────────────────────────────────────────
 
 type TurnResult = {
@@ -85,7 +82,7 @@ const TURN_LABELS = [
 
 export default function SimulatorV3() {
   const router = useRouter()
-
+  const pathname = usePathname()
   // Mode
   const [mode, setMode] = useState<'single' | 'h2h'>('single')
 
