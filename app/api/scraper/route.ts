@@ -10,14 +10,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "toolName is required" }, { status: 400 });
     }
 
-    const prompt = `You are a product researcher. Use web search to find Reddit posts, threads, and comments where people discuss how they use "${toolName}".
+    const prompt = `You are a product researcher. Use web search to find real discussions where people talk about how they use "${toolName}". Search broadly — Reddit, GitHub Discussions, Hacker News, X/Twitter, Discord communities, forums, and blog posts all count.
 
-Search for:
-1. "site:reddit.com ${toolName} how I use"
-2. "site:reddit.com ${toolName} use case"
-3. "site:reddit.com ${toolName} workflow"
+Search for these queries:
+1. "${toolName} use case"
+2. "${toolName} how I use it"
+3. "${toolName} workflow"
+4. "${toolName} reddit OR "hacker news" OR github"
 
-After searching, analyze the results and return ONLY a JSON object (no markdown, no preamble) with this exact shape:
+After searching, analyze all results and return ONLY a JSON object (no markdown, no preamble) with this exact shape:
 
 {
   "tool": "${toolName}",
@@ -27,16 +28,17 @@ After searching, analyze the results and return ONLY a JSON object (no markdown,
       "category": "<short category name>",
       "description": "<1-2 sentence description of this use case>",
       "frequency": "high" | "medium" | "low",
-      "exampleQuote": "<a paraphrased or short real quote from a Reddit user>",
-      "subreddits": ["<subreddit1>", "<subreddit2>"]
+      "exampleQuote": "<a paraphrased or short real quote from a user>",
+      "sources": ["reddit", "github", "hackernews", "twitter", "forum", "blog"]
     }
   ],
   "topUserTypes": ["<type1>", "<type2>", "<type3>"],
   "sentiment": "positive" | "mixed" | "negative",
-  "keyInsight": "<one sharp product insight from the Reddit data>"
+  "keyInsight": "<one sharp product insight from the community data>",
+  "primaryCommunities": ["<where most discussion is happening, e.g. reddit, github, twitter>"]
 }
 
-Return 5-10 use cases. Order by frequency (high first). Return ONLY valid JSON, nothing else.`;
+Return 5-10 use cases ordered by frequency (high first). The "sources" field per use case should list where evidence for that use case was found. Return ONLY valid JSON, nothing else.`;
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-20250514",
