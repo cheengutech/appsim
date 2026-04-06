@@ -225,11 +225,14 @@ export default function SimulatorV3() {
       { label: 'Reddit Research', path: '/reddit' },
       { label: 'Use Case Scraper', path: '/scraper' },
     ].map(tab => (
-      <button key={tab.path} onClick={() => router.push(tab.path)} style={{ padding: '10px 20px', fontSize: 13, fontFamily: 'system-ui', background: 'transparent', border: 'none', cursor: 'pointer', color: tab.path === '/scraper' ? '#1a1a1a' : '#888', fontWeight: tab.path === '/scraper' ? 700 : 400, borderBottom: tab.path === '/scraper' ? '2px solid #1a1a1a' : '2px solid transparent', marginBottom: -2 }}>
+      <button key={tab.path} onClick={() => router.push(tab.path)} style={{ padding: '10px 20px', fontSize: 13, fontFamily: 'system-ui', background: 'transparent', border: 'none', cursor: 'pointer', color: tab.path === '/simulator' ? '#1a1a1a' : '#888', fontWeight: tab.path === '/simulator' ? 700 : 400, borderBottom: tab.path === '/simulator' ? '2px solid #1a1a1a' : '2px solid transparent', marginBottom: -2 }}>
         {tab.label}
       </button>
     ))}
   </div>
+  <button onClick={() => setShowLibrary(!showLibrary)} style={BtnO}>
+    {showLibrary ? 'Hide library' : `Library${savedPrompts.length > 0 ? ` (${savedPrompts.length})` : ''}`}
+  </button>
 </div>
 
       {/* Header */}
