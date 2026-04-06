@@ -65,7 +65,9 @@ Respond ONLY with valid JSON:
     })
 
     const raw = message.content.find(b => b.type === 'text')?.text ?? ''
-    const match = raw.match(/\{[\s\S]*\}/)
+    // Strip any markdown fences
+    const cleaned = raw.replace(/```json|```/g, '').trim()
+    const match = cleaned.match(/\{[\s\S]*\}/)
     if (!match) throw new Error(`Turn ${t.turn} returned no JSON`)
     results.push({ turn: t.turn, day: t.day, label: t.label, ...JSON.parse(match[0]) })
   }
@@ -97,7 +99,7 @@ async function improvePrompt(appDesc: string, simResult: SimResult, iteration: n
 
   const message = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 1500,
+    max_tokens: 2000,
     messages: [{ role: 'user', content: `You are a product optimizer. Analyze this app simulation and rewrite the concept to improve retention and NPS.
 
 Original app concept:
@@ -122,8 +124,13 @@ Respond ONLY with JSON:
   })
 
   const raw = message.content.find(b => b.type === 'text')?.text ?? ''
-  const match = raw.match(/\{[\s\S]*\}/)
-  if (!match) throw new Error('No JSON in improvement')
+  // Strip any markdown fences
+  const cleaned = raw.replace(/```json|```/g, '').trim()
+  const match = cleaned.match(/\{[\s\S]*\}/)
+  if (!match) {
+    console.error('improvePrompt raw response:', raw.slice(0, 500))
+    throw new Error('No JSON in improvement')
+  }
   return JSON.parse(match[0])
 }
 
@@ -181,7 +188,7 @@ Monetization config: ${JSON.stringify(monetization)}
 
 Calculate realistic revenue projections. Assume the ${s.startingAgents} agents represent a real user cohort acquired in month 1.
 
-Respond ONLY with JSON:
+Respond ONLY with a raw JSON object. No markdown. No backticks. No explanation. Start your response with { and end with }.
 {
   "month1Revenue": <number>,
   "month3Revenue": <number>,
