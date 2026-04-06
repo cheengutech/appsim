@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@supabase/supabase-js'
 import EnhancePanel from './EnhancePanel'
-import { usePathname } from 'next/navigation'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -82,7 +81,6 @@ const TURN_LABELS = [
 
 export default function SimulatorV3() {
   const router = useRouter()
-  const pathname = usePathname()
   // Mode
   const [mode, setMode] = useState<'single' | 'h2h'>('single')
 
@@ -227,16 +225,12 @@ export default function SimulatorV3() {
       { label: 'Reddit Research', path: '/reddit' },
       { label: 'Use Case Scraper', path: '/scraper' },
     ].map(tab => (
-      <button key={tab.path} onClick={() => router.push(tab.path)} style={{ padding: '10px 20px', fontSize: 13, fontFamily: 'system-ui', background: 'transparent', border: 'none', cursor: 'pointer', color: pathname === tab.path ? '#1a1a1a' : '#888', fontWeight: pathname === tab.path ? 700 : 400, borderBottom: pathname === tab.path ? '2px solid #1a1a1a' : '2px solid transparent', marginBottom: -2 }}>
+      <button key={tab.path} onClick={() => router.push(tab.path)} style={{ padding: '10px 20px', fontSize: 13, fontFamily: 'system-ui', background: 'transparent', border: 'none', cursor: 'pointer', color: tab.path === '/scraper' ? '#1a1a1a' : '#888', fontWeight: tab.path === '/scraper' ? 700 : 400, borderBottom: tab.path === '/scraper' ? '2px solid #1a1a1a' : '2px solid transparent', marginBottom: -2 }}>
         {tab.label}
       </button>
     ))}
   </div>
-  <button onClick={() => setShowLibrary(!showLibrary)} style={BtnO}>
-    {showLibrary ? 'Hide library' : `Library${savedPrompts.length > 0 ? ` (${savedPrompts.length})` : ''}`}
-  </button>
 </div>
-      
 
       {/* Header */}
       <div style={{ marginBottom: 20 }}>

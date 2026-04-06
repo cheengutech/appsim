@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -68,6 +69,7 @@ Simulation instructions: Model how users across these real-world use case catego
 }
 
 export default function ScraperPage() {
+  const router = useRouter();
   const [toolName, setToolName] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScraperResult | null>(null);
@@ -121,12 +123,29 @@ export default function ScraperPage() {
   }
 
   return (
-    <div style={{ maxWidth: 760, margin: "0 auto", padding: "2rem 1.25rem", fontFamily: "var(--font-sans, sans-serif)" }}>
+    <div style={{ maxWidth: 860, margin: "0 auto", padding: "2rem 1.5rem", fontFamily: "'Georgia', serif", color: "#1a1a1a", background: "#fafaf8", minHeight: "100vh" }}>
+
+      {/* Nav */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", borderBottom: "2px solid #1a1a1a", marginBottom: 24 }}>
+        <div style={{ display: "flex" }}>
+          {[
+            { label: "Simulator", path: "/simulator" },
+            { label: "Reddit Research", path: "/reddit" },
+            { label: "Use Case Scraper", path: "/scraper" },
+          ].map(tab => (
+            <button key={tab.path} onClick={() => router.push(tab.path)} style={{ padding: "10px 20px", fontSize: 13, fontFamily: "system-ui", background: "transparent", border: "none", cursor: "pointer", color: tab.path === "/scraper" ? "#1a1a1a" : "#888", fontWeight: tab.path === "/scraper" ? 700 : 400, borderBottom: tab.path === "/scraper" ? "2px solid #1a1a1a" : "2px solid transparent", marginBottom: -2 }}>
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Header */}
       <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: 22, fontWeight: 500, marginBottom: 6, color: "var(--color-text-primary, #111)" }}>
+        <h1 style={{ fontSize: 26, fontWeight: 700, fontFamily: "'Georgia', serif", margin: "4px 0 6px" }}>
           Use case scraper
         </h1>
-        <p style={{ fontSize: 14, color: "var(--color-text-secondary, #666)", margin: 0 }}>
+        <p style={{ fontSize: 13, color: "#666", fontFamily: "system-ui", margin: 0 }}>
           Enter any tool, app, or SaaS — get back the top ways people are actually using it across Reddit, GitHub, Hacker News, X, and more.
         </p>
       </div>
@@ -138,39 +157,19 @@ export default function ScraperPage() {
           onChange={(e) => setToolName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           placeholder="e.g. OpenClaw, Notion, Cursor, Linear..."
-          style={{
-            flex: 1,
-            padding: "10px 14px",
-            fontSize: 14,
-            border: "0.5px solid var(--color-border-secondary, #ccc)",
-            borderRadius: 8,
-            outline: "none",
-            background: "var(--color-background-primary, #fff)",
-            color: "var(--color-text-primary, #111)",
-          }}
+          style={{ flex: 1, padding: "10px 14px", fontSize: 14, fontFamily: "system-ui", border: "1px solid #e0e0d8", borderRadius: 4, outline: "none", background: "#fff", color: "#1a1a1a" }}
         />
         <button
           onClick={handleSearch}
           disabled={loading || !toolName.trim()}
-          style={{
-            padding: "10px 20px",
-            fontSize: 14,
-            fontWeight: 500,
-            border: "0.5px solid var(--color-border-secondary, #ccc)",
-            borderRadius: 8,
-            background: loading ? "var(--color-background-secondary, #f5f5f5)" : "var(--color-text-primary, #111)",
-            color: loading ? "var(--color-text-secondary, #666)" : "var(--color-background-primary, #fff)",
-            cursor: loading ? "not-allowed" : "pointer",
-            whiteSpace: "nowrap",
-          }}
+          style={{ padding: "10px 20px", fontSize: 13, fontFamily: "system-ui", fontWeight: 700, border: "none", borderRadius: 4, background: loading ? "#ccc" : "#1a1a1a", color: "#fff", cursor: loading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}
         >
           {loading ? "Searching…" : "Search →"}
         </button>
       </div>
 
       {loading && (
-        <div style={{ textAlign: "center", padding: "3rem 0", color: "var(--color-text-secondary, #666)", fontSize: 14 }}>
-          <div style={{ marginBottom: 12, fontSize: 24 }}>🔍</div>
+        <div style={{ textAlign: "center", padding: "3rem 0", color: "#888", fontSize: 13, fontFamily: "system-ui" }}>
           Scanning Reddit, GitHub, Hacker News, and X for how people use <strong>{toolName}</strong>…
           <br />
           <span style={{ fontSize: 12, opacity: 0.7 }}>This takes ~15–30 seconds</span>
@@ -178,7 +177,7 @@ export default function ScraperPage() {
       )}
 
       {error && (
-        <div style={{ padding: "14px 16px", background: "#FCEBEB", color: "#791F1F", borderRadius: 8, fontSize: 14, border: "0.5px solid #F09595" }}>
+        <div style={{ padding: "14px 16px", background: "#FCEBEB", color: "#791F1F", borderRadius: 4, fontSize: 13, fontFamily: "system-ui", border: "1px solid #F09595" }}>
           {error}
         </div>
       )}
@@ -187,22 +186,18 @@ export default function ScraperPage() {
         <div>
           {/* Summary row */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: "1.5rem" }}>
-            <div style={{ background: "var(--color-background-secondary, #f9f9f9)", borderRadius: 8, padding: "14px 16px" }}>
-              <div style={{ fontSize: 12, color: "var(--color-text-secondary, #888)", marginBottom: 4 }}>Tool analyzed</div>
-              <div style={{ fontSize: 16, fontWeight: 500 }}>{result.tool}</div>
-            </div>
-            <div style={{ background: "var(--color-background-secondary, #f9f9f9)", borderRadius: 8, padding: "14px 16px" }}>
-              <div style={{ fontSize: 12, color: "var(--color-text-secondary, #888)", marginBottom: 4 }}>Use cases found</div>
-              <div style={{ fontSize: 16, fontWeight: 500 }}>{result.useCases?.length ?? 0}</div>
-            </div>
-            <div style={{ background: "var(--color-background-secondary, #f9f9f9)", borderRadius: 8, padding: "14px 16px" }}>
-              <div style={{ fontSize: 12, color: "var(--color-text-secondary, #888)", marginBottom: 4 }}>Sentiment</div>
-              <span style={{
-                fontSize: 12, padding: "2px 8px", borderRadius: 20,
-                background: sentimentColor[result.sentiment]?.bg ?? "#eee",
-                color: sentimentColor[result.sentiment]?.text ?? "#333",
-                fontWeight: 500, display: "inline-block", marginTop: 4,
-              }}>
+            {[
+              { label: "Tool analyzed", value: result.tool },
+              { label: "Use cases found", value: String(result.useCases?.length ?? 0) },
+            ].map(({ label, value }) => (
+              <div key={label} style={{ background: "#f0f0ec", padding: "14px 16px" }}>
+                <div style={{ fontSize: 11, color: "#888", fontFamily: "system-ui", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>{label}</div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>{value}</div>
+              </div>
+            ))}
+            <div style={{ background: "#f0f0ec", padding: "14px 16px" }}>
+              <div style={{ fontSize: 11, color: "#888", fontFamily: "system-ui", marginBottom: 4, textTransform: "uppercase", letterSpacing: "0.05em" }}>Sentiment</div>
+              <span style={{ fontSize: 12, padding: "2px 8px", borderRadius: 20, background: sentimentColor[result.sentiment]?.bg ?? "#eee", color: sentimentColor[result.sentiment]?.text ?? "#333", fontWeight: 700, fontFamily: "system-ui", display: "inline-block", marginTop: 2 }}>
                 {result.sentiment}
               </span>
             </div>
@@ -210,7 +205,7 @@ export default function ScraperPage() {
 
           {/* Key insight */}
           {result.keyInsight && (
-            <div style={{ padding: "14px 16px", background: "#E6F1FB", borderRadius: 8, borderLeft: "3px solid #378ADD", marginBottom: "1.5rem", fontSize: 14, color: "#0C447C", lineHeight: 1.5 }}>
+            <div style={{ padding: "14px 16px", background: "#E6F1FB", borderLeft: "3px solid #378ADD", marginBottom: "1.5rem", fontSize: 13, fontFamily: "system-ui", color: "#0C447C", lineHeight: 1.6 }}>
               <strong>Key insight:</strong> {result.keyInsight}
             </div>
           )}
@@ -218,16 +213,10 @@ export default function ScraperPage() {
           {/* Primary communities */}
           {result.primaryCommunities?.length > 0 && (
             <div style={{ marginBottom: "1.5rem" }}>
-              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8, color: "var(--color-text-primary, #111)" }}>
-                Where discussion is happening
-              </div>
+              <div style={{ fontSize: 11, color: "#888", fontFamily: "system-ui", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Where discussion is happening</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {result.primaryCommunities.map((c, i) => (
-                  <span key={i} style={{
-                    fontSize: 12, padding: "4px 10px", borderRadius: 20,
-                    background: "#E6F1FB", color: "#0C447C",
-                    border: "0.5px solid #B5D4F4", fontWeight: 500,
-                  }}>
+                  <span key={i} style={{ fontSize: 12, padding: "4px 10px", background: "#E6F1FB", color: "#0C447C", border: "1px solid #B5D4F4", fontFamily: "system-ui", fontWeight: 700 }}>
                     {sourceLabel[c.toLowerCase()] ?? c}
                   </span>
                 ))}
@@ -236,47 +225,27 @@ export default function ScraperPage() {
           )}
 
           {/* Send to simulator CTA */}
-          <div style={{
-            padding: "16px 18px",
-            background: saved ? "#E1F5EE" : "var(--color-background-primary, #fff)",
-            border: `0.5px solid ${saved ? "#9FE1CB" : "var(--color-border-secondary, #ddd)"}`,
-            borderRadius: 10, marginBottom: "1.5rem",
-            display: "flex", alignItems: "center", justifyContent: "space-between",
-            gap: 16, flexWrap: "wrap" as const, transition: "background 0.2s",
-          }}>
+          <div style={{ padding: "16px 18px", background: saved ? "#E1F5EE" : "#fff", border: `1px solid ${saved ? "#9FE1CB" : "#e0e0d8"}`, marginBottom: "1.5rem", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap" as const }}>
             <div>
-              <div style={{ fontSize: 14, fontWeight: 500, marginBottom: 3, color: saved ? "#085041" : "var(--color-text-primary, #111)" }}>
-                {saved ? "Saved to simulator prompt library" : "Run a simulation from this data"}
+              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3, fontFamily: "system-ui", color: saved ? "#085041" : "#1a1a1a" }}>
+                {saved ? "Saved to simulator prompt library ✓" : "Run a simulation from this data"}
               </div>
-              <div style={{ fontSize: 12, color: saved ? "#0F6E56" : "var(--color-text-secondary, #888)" }}>
-                {saved
-                  ? `Open the simulator and load "${result.tool} — community use case sim" from the prompt library`
-                  : "Builds a sim prompt grounded in real community use cases and saves it to your library"}
+              <div style={{ fontSize: 12, fontFamily: "system-ui", color: saved ? "#0F6E56" : "#888" }}>
+                {saved ? `Open the simulator and load "${result.tool} — community use case sim" from the prompt library` : "Builds a sim prompt grounded in real community use cases and saves it to your library"}
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div style={{ display: "flex", gap: 8 }}>
               {saved && (
-                <a href="/simulator" style={{
-                  padding: "8px 16px", fontSize: 13, fontWeight: 500,
-                  border: "0.5px solid #0F6E56", borderRadius: 7,
-                  background: "#085041", color: "#E1F5EE",
-                  textDecoration: "none", whiteSpace: "nowrap",
-                }}>
+                <a href="/simulator" style={{ padding: "8px 16px", fontSize: 13, fontFamily: "system-ui", fontWeight: 700, border: "none", background: "#1a1a1a", color: "#fff", textDecoration: "none", whiteSpace: "nowrap" }}>
                   Open simulator →
                 </a>
               )}
               {!saved && (
                 <div>
-                  <button onClick={handleSendToSimulator} disabled={saving} style={{
-                    padding: "8px 18px", fontSize: 13, fontWeight: 500,
-                    border: "0.5px solid #378ADD", borderRadius: 7,
-                    background: saving ? "var(--color-background-secondary, #f5f5f5)" : "#E6F1FB",
-                    color: saving ? "var(--color-text-secondary, #888)" : "#0C447C",
-                    cursor: saving ? "not-allowed" : "pointer", whiteSpace: "nowrap",
-                  }}>
+                  <button onClick={handleSendToSimulator} disabled={saving} style={{ padding: "8px 18px", fontSize: 13, fontFamily: "system-ui", fontWeight: 700, border: "1px solid #1a1a1a", background: saving ? "#f0f0ec" : "#fff", color: saving ? "#888" : "#1a1a1a", cursor: saving ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
                     {saving ? "Saving…" : "Send to simulator →"}
                   </button>
-                  {saveError && <div style={{ fontSize: 11, color: "#791F1F", marginTop: 4 }}>{saveError}</div>}
+                  {saveError && <div style={{ fontSize: 11, color: "#791F1F", marginTop: 4, fontFamily: "system-ui" }}>{saveError}</div>}
                 </div>
               )}
             </div>
@@ -285,15 +254,10 @@ export default function ScraperPage() {
           {/* User types */}
           {result.topUserTypes?.length > 0 && (
             <div style={{ marginBottom: "1.5rem" }}>
-              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8, color: "var(--color-text-primary, #111)" }}>Top user types</div>
+              <div style={{ fontSize: 11, color: "#888", fontFamily: "system-ui", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>Top user types</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                 {result.topUserTypes.map((t, i) => (
-                  <span key={i} style={{
-                    fontSize: 12, padding: "4px 10px", borderRadius: 20,
-                    background: "var(--color-background-secondary, #f5f5f5)",
-                    color: "var(--color-text-secondary, #666)",
-                    border: "0.5px solid var(--color-border-tertiary, #ddd)",
-                  }}>
+                  <span key={i} style={{ fontSize: 12, padding: "4px 10px", background: "#f0f0ec", color: "#555", fontFamily: "system-ui", border: "1px solid #e0e0d8" }}>
                     {t}
                   </span>
                 ))}
@@ -302,45 +266,28 @@ export default function ScraperPage() {
           )}
 
           {/* Use case cards */}
-          <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 10, color: "var(--color-text-primary, #111)" }}>Use cases</div>
+          <div style={{ fontSize: 11, color: "#888", fontFamily: "system-ui", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 10 }}>Use cases</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {result.useCases?.map((uc, i) => (
-              <div key={i} style={{
-                background: "var(--color-background-primary, #fff)",
-                border: "0.5px solid var(--color-border-tertiary, #e5e5e5)",
-                borderRadius: 10, padding: "14px 16px",
-              }}>
+              <div key={i} style={{ background: "#fff", border: "1px solid #e0e0d8", padding: "14px 16px" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-                  <span style={{ fontSize: 14, fontWeight: 500, color: "var(--color-text-primary, #111)" }}>{uc.category}</span>
-                  <span style={{
-                    fontSize: 11, padding: "2px 8px", borderRadius: 20,
-                    background: freqColor[uc.frequency]?.bg ?? "#eee",
-                    color: freqColor[uc.frequency]?.text ?? "#333",
-                    fontWeight: 500,
-                  }}>
-                    {freqColor[uc.frequency]?.label ?? uc.frequency} frequency
+                  <span style={{ fontSize: 14, fontWeight: 700 }}>{uc.category}</span>
+                  <span style={{ fontSize: 11, padding: "2px 8px", background: freqColor[uc.frequency]?.bg ?? "#eee", color: freqColor[uc.frequency]?.text ?? "#333", fontFamily: "system-ui", fontWeight: 700 }}>
+                    {freqColor[uc.frequency]?.label ?? uc.frequency}
                   </span>
                 </div>
-                <p style={{ fontSize: 13, color: "var(--color-text-secondary, #666)", margin: "0 0 8px", lineHeight: 1.5 }}>
+                <p style={{ fontSize: 13, fontFamily: "system-ui", color: "#555", margin: "0 0 8px", lineHeight: 1.6 }}>
                   {uc.description}
                 </p>
                 {uc.exampleQuote && (
-                  <div style={{
-                    fontSize: 12, color: "var(--color-text-tertiary, #999)", fontStyle: "italic",
-                    borderLeft: "2px solid var(--color-border-secondary, #ddd)",
-                    paddingLeft: 10, marginBottom: 8, lineHeight: 1.5,
-                  }}>
+                  <div style={{ fontSize: 12, fontFamily: "system-ui", color: "#888", fontStyle: "italic", borderLeft: "2px solid #e0e0d8", paddingLeft: 10, marginBottom: 8, lineHeight: 1.5 }}>
                     "{uc.exampleQuote}"
                   </div>
                 )}
                 {uc.sources?.length > 0 && (
                   <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
                     {uc.sources.map((s, j) => (
-                      <span key={j} style={{
-                        fontSize: 11, padding: "2px 7px", borderRadius: 4,
-                        background: "var(--color-background-secondary, #f5f5f5)",
-                        color: "var(--color-text-secondary, #888)",
-                      }}>
+                      <span key={j} style={{ fontSize: 11, padding: "2px 7px", background: "#f0f0ec", color: "#888", fontFamily: "system-ui", border: "1px solid #e0e0d8" }}>
                         {sourceLabel[s.toLowerCase()] ?? s}
                       </span>
                     ))}

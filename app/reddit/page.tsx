@@ -114,15 +114,21 @@ export default function RedditResearch() {
   return (
     <div style={{ maxWidth: 820, margin: '0 auto', padding: '2rem 1.5rem', fontFamily: "'Georgia', serif", color: '#1a1a1a', background: '#fafaf8', minHeight: '100vh' }}>
 
-      {/* Nav */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 24, borderBottom: '2px solid #1a1a1a' }}>
-        <button onClick={() => router.push('/simulator')} style={{ padding: '10px 20px', fontSize: 13, fontFamily: 'system-ui', background: 'transparent', border: 'none', cursor: 'pointer', color: '#888', borderBottom: '2px solid transparent', marginBottom: -2 }}>
-          Simulator
-        </button>
-        <button style={{ padding: '10px 20px', fontSize: 13, fontFamily: 'system-ui', background: 'transparent', border: 'none', cursor: 'pointer', color: '#1a1a1a', fontWeight: 700, borderBottom: '2px solid #1a1a1a', marginBottom: -2 }}>
-          Reddit Research
-        </button>
-      </div>
+{/* Nav */}
+<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid #1a1a1a', marginBottom: 24 }}>
+  <div style={{ display: 'flex' }}>
+    {[
+      { label: 'Simulator', path: '/simulator' },
+      { label: 'Reddit Research', path: '/reddit' },
+      { label: 'Use Case Scraper', path: '/scraper' },
+    ].map(tab => (
+      <button key={tab.path} onClick={() => router.push(tab.path)} style={{ padding: '10px 20px', fontSize: 13, fontFamily: 'system-ui', background: 'transparent', border: 'none', cursor: 'pointer', color: tab.path === '/reddit' ? '#1a1a1a' : '#888', fontWeight: tab.path === '/reddit' ? 700 : 400, borderBottom: tab.path === '/reddit' ? '2px solid #1a1a1a' : '2px solid transparent', marginBottom: -2 }}>
+        {tab.label}
+      </button>
+    ))}
+  </div>
+</div>
+
 
       {/* Header */}
       <div style={{ marginBottom: 24 }}>
